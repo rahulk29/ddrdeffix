@@ -17,7 +17,12 @@ pub fn prefix(path: &str) {
         r"\( (?<pin>[a-zA-Z_][a-zA-Z0-9\[\]_]+) (?<net>[a-zA-Z_][a-zA-Z0-9\[\]_]+) \)(?<rest>.*)$",
     )
     .unwrap();
+
     for line in s.lines() {
+        if line.contains("DIEAREA") {
+            continue;
+        }
+
         if line.contains("COMPONENTS") {
             in_components = true;
         }
@@ -30,12 +35,21 @@ pub fn prefix(path: &str) {
         }
         if in_components {
             if let Some(caps) = re_components.captures(line.trim()) {
-                write!(
-                    &mut out,
-                    "- {}{}{}\n",
-                    path, &caps["component"], &caps["rest"]
-                )
-                .unwrap();
+                let rest_fixed = &caps["rest"].replace("PLACED", "FIXED");
+                if rest_fixed.contains("ESD") {
+                    let physical_esd = rest_fixed.replace(";", "+ SOURCE DIST ;");
+                    write!(
+                        &mut out,
+                        "- {}{}{}\n",
+                        path, &caps["component"], physical_esd
+                    )
+                    .unwrap();
+                } else {
+                    if !(rest_fixed.contains("diffcheck")) {
+                        write!(&mut out, "- {}{}{}\n", path, &caps["component"], rest_fixed)
+                            .unwrap();
+                    }
+                }
             } else {
                 write!(&mut out, "{}\n", line).unwrap();
             }
@@ -81,6 +95,6 @@ mod tests {
 
     #[test]
     fn fix_def() {
-        prefix("phy\\/");
+        prefix("phy\\/ddr_phy_top_block\\/");
     }
 }
