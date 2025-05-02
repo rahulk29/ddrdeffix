@@ -17,8 +17,13 @@ pub fn prefix(path: &str) {
         r"\( (?<pin>[a-zA-Z_][a-zA-Z0-9\[\]_]+) (?<net>[a-zA-Z_][a-zA-Z0-9\[\]_]+) \)(?<rest>.*)$",
     )
     .unwrap();
+    let mut skip_next = false;
 
     for line in s.lines() {
+        if skip_next {
+            skip_next = false;
+            continue;
+        }
         if line.contains("DIEAREA") {
             continue;
         }
@@ -37,7 +42,7 @@ pub fn prefix(path: &str) {
             if let Some(caps) = re_components.captures(line.trim()) {
                 let rest_fixed = &caps["rest"].replace("PLACED", "FIXED");
                 if rest_fixed.contains("ESD") {
-                    let physical_esd = rest_fixed.replace(";", "+ SOURCE DIST ;");
+                    let physical_esd = rest_fixed.replace(";", "\n  + SOURCE DIST ;");
                     write!(
                         &mut out,
                         "- {}{}{}\n",
@@ -48,6 +53,9 @@ pub fn prefix(path: &str) {
                     if !(rest_fixed.contains("diffcheck")) {
                         write!(&mut out, "- {}{}{}\n", path, &caps["component"], rest_fixed)
                             .unwrap();
+                    } else {
+                        // skip the source dist on the line after diffcheck placement
+                        skip_next = true;
                     }
                 }
             } else {
