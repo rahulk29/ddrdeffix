@@ -75,12 +75,22 @@ pub fn prefix(path: &str) {
                 } else {
                     &caps["pin"]
                 };
-                write!(
-                    &mut out,
-                    "( {}{} {}{} ){}\n",
-                    path, first, path, &caps["net"], &caps["rest"]
-                )
-                .unwrap();
+                println!("{}", first);
+                if first == "PIN" {
+                    write!(
+                        &mut out,
+                        "( {} {}{} ){}\n",
+                        first, path, &caps["net"], &caps["rest"]
+                    )
+                    .unwrap();
+                } else {
+                    write!(
+                        &mut out,
+                        "( {}{} {}{} ){}\n",
+                        path, first, path, &caps["net"], &caps["rest"]
+                    )
+                    .unwrap();
+                }
             } else {
                 write!(&mut out, "{}\n", line).unwrap();
             }
