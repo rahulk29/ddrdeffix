@@ -24,9 +24,6 @@ pub fn prefix(path: &str) {
             skip_next = false;
             continue;
         }
-        if line.contains("DIEAREA") {
-            continue;
-        }
 
         if line.contains("COMPONENTS") {
             in_components = true;
@@ -75,7 +72,6 @@ pub fn prefix(path: &str) {
                 } else {
                     &caps["pin"]
                 };
-                println!("{}", first);
                 if first == "PIN" {
                     write!(
                         &mut out,
